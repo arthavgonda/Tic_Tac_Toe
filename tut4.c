@@ -3,20 +3,6 @@
 #include <time.h>
 #include <stdbool.h>
 
-char computerOutput(char userChoice, char str[3][3]) {
-    srand(time(NULL));
-    int random, compRow, compCol;
-    char computerChoice = (userChoice == 'O') ? 'X' : 'O';
-    do {
-        random = (rand() % 9) + 1;
-        compRow = (random - 1) / 3;
-        compCol = (random - 1) % 3;
-    } while (str[compRow][compCol] != ' ');
-
-    str[compRow][compCol] = computerChoice;
-    return computerChoice;
-}
-
 bool process(char userChoice, int userInput, char str[3][3]) {
     if (userInput < 1 || userInput > 9) {
         printf("Enter a valid position (1-9)\n");
@@ -69,6 +55,62 @@ void printBoard(char str[3][3]) {
     printf("\n");
 }
 
+bool isWinningMove(char board[3][3], char player, int row, int col) {
+    char temp = board[row][col];
+    board[row][col] = player;
+    bool wins = (result(board) == player);
+    board[row][col] = temp;
+    return wins;
+}
+
+void computerMove(char board[3][3], char computerChar) {
+    char playerChar = (computerChar == 'X') ? 'O' : 'X';
+    
+    // Check for winning move
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (board[i][j] == ' ' && isWinningMove(board, computerChar, i, j)) {
+                board[i][j] = computerChar;
+                return;
+            }
+        }
+    }
+    
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (board[i][j] == ' ' && isWinningMove(board, playerChar, i, j)) {
+                board[i][j] = computerChar;
+                return;
+            }
+        }
+    }
+    
+    if (board[1][1] == ' ') {
+        board[1][1] = computerChar;
+        return;
+    }
+    
+    int corners[4][2] = {{0,0}, {0,2}, {2,0}, {2,2}};
+    for (int i = 0; i < 4; i++) {
+        int row = corners[i][0];
+        int col = corners[i][1];
+        if (board[row][col] == ' ') {
+            board[row][col] = computerChar;
+            return;
+        }
+    }
+    
+    // Take any available space
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (board[i][j] == ' ') {
+                board[i][j] = computerChar;
+                return;
+            }
+        }
+    }
+}
+
 int main() {
     int userInput;
     char userChoice;
@@ -81,6 +123,8 @@ int main() {
         printf("Invalid choice. Defaulting to X.\n");
         userChoice = 'X';
     }
+    
+    char computerChoice = (userChoice == 'X') ? 'O' : 'X';
 
     char gameResult;
     while (1) {
@@ -93,7 +137,7 @@ int main() {
             if (gameResult != ' ') break;
 
             printf("Computer's turn:\n");
-            computerOutput(userChoice, str);
+            computerMove(str, computerChoice);
             gameResult = result(str);
             if (gameResult != ' ') break;
         }
